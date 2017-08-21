@@ -12,13 +12,17 @@ export default function request(method, url, body) {
     }
     return fetch(url, {
         method: method,
+        mode: 'no-cors',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'Access-Control-Allow-Origin': '*',
             'Access-Token': sessionStorage.getItem('access_token') || '' // 从sessionStorage中获取access token
         },
         body: body
     }).then((response) => {
+        debugger;
         if (response.status === 200) {
             return response.json();
         } else {
