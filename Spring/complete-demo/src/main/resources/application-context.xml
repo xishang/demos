@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd"
+       default-lazy-init="true">
+
+    <!-- 加载属性配置文件 -->
+    <!-- ignore-unresolvable表示属性值解析不到时是否忽略异常，默认为false，此处设置为true表示遇到解析不到的属性将不抛出异常 -->
+    <context:property-placeholder location="classpath:config.properties" ignore-unresolvable="true"/>
+
+    <!-- 扫描注册Bean，过滤掉Controller、RestController和ControllerAdvice，这两个在mvc配置文件中扫描 -->
+    <!-- 该标签自动注入了一系列BeanPostProcessor，以支持@Autowired、@PostConstruct等注解，包含了<context:annotation-config/>的作用 -->
+    <context:component-scan base-package="com.demos.spring.completedemo">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
+        <context:exclude-filter type="annotation"
+                                expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+
+    <!-- 启用定时任务 -->
+    <task:annotation-driven/>
+
+    <!-- 启用注解形式的AOP，默认使用JDK动态代理，使用CGLib实现对类的动态代理 -->
+    <!-- 设置proxy-target-class="true"将强制使用CGLib -->
+    <aop:aspectj-autoproxy/>
+
+    <!-- 配置druid对Spring和Jdbc的关联监控，方法名正则匹配拦截配置 -->
+    <bean id="druid-stat-interceptor" class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor"/>
+    <bean id="druid-stat-pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut" scope="prototype">
+        <property name="patterns">
+            <list>
+                <value>com.demos.spring.completedemo.service.*</value>
+                <value>com.demos.spring.completedemo.mybatis.mapper.*</value>
+            </list>
+        </property>
+    </bean>
+    <aop:config>
+        <aop:advisor advice-ref="druid-stat-interceptor" pointcut-ref="druid-stat-pointcut"/>
+    </aop:config>
+
+    <!-- Druid数据源配置 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <!-- 数据库连接配置 -->
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="${jdbc.conn.url}"/>
+        <property name="username" value="${jdbc.conn.username}"/>
+        <property name="password" value="${jdbc.conn.password}"/>
+        <!-- 配置初始化连接数、最小连接数、最大连接数 -->
+        <property name="initialSize" value="${jdbc.pool.initialSize}"/>
+        <property name="minIdle" value="${jdbc.pool.minIdle}"/>
+        <property name="maxActive" value="${jdbc.pool.maxActive}"/>
+        <!-- 配置获取连接等待超时的时间，单位: 毫秒 -->
+        <property name="maxWait" value="${jdbc.pool.maxWait}"/>
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位: 毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+        <!-- 配置一个连接在池中最小生存的时间，单位: 毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000"/>
+        <property name="validationQuery" value="SELECT 'x'"/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小，MySQL5.5及以上版本有PSCache -->
+        <property name="poolPreparedStatements" value="true"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
+        <!-- 配置监控统计拦截的filters -->
+        <property name="filters" value="stat,config,wall"/>
+        <!--sql 慢查询记录日志 -->
+        <property name="connectionProperties" value="druid.stat.slowSqlMillis=5000;druid.stat.logSlowSql=true"/>
+        <!-- 类型是List<com.alibaba.druid.filter.Filter>，如果同时配置了filters和proxyFilters，是组合关系，并非替换关系 -->
+        <!--<property name="proxyFilters">
+            <list>
+                <ref bean="statFilter"/>
+                <ref bean="wallFilter"/>
+            </list>
+        </property>-->
+    </bean>
+    <!-- Druid监控Filters -->
+    <!--<bean id="statFilter" class="com.alibaba.druid.filter.stat.StatFilter">
+        <property name="slowSqlMillis" value="5000"/>
+        <property name="logSlowSql" value="true"/>
+    </bean>
+    <bean id="wallFilter" class="com.alibaba.druid.wall.WallFilter">
+        <property name="config" ref="wallConfig"/>
+    </bean>-->
+    <!--<bean id="wallConfig" class="com.alibaba.druid.wall.WallConfig">-->
+    <!-- 批量提交 -->
+    <!--<property name="multiStatementAllow" value="true"/>-->
+    <!--</bean>-->
+
+    <!-- 定义事务 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 开启注解式事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- Mybatis配置 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:application-mybatis.xml"/>
+        <!-- 若mapper.xml不在basePackage下，可以指定mapper.xml的位置 -->
+        <!--<property name="mapperLocations" value="classpath:mapper/**/*.xml"/>-->
+        <!-- 实体类所在的包 -->
+        <property name="typeAliasesPackage" value="com.demos.spring.completedemo.bean"/>
+    </bean>
+    <!-- 扫描basePackage下所有接口 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.demos.spring.completedemo.mybatis.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+
+    <!-- 引入其他配置文件 -->
+    <import resource="application-shiro.xml"/>
+    <import resource="application-redis.xml"/>
+
+</beans>

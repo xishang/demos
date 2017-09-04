@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/mvc  http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- SpringMVC核心组件: HandlerMapping, MessageConverter, ViewResolver -->
+
+    <!-- 加载属性配置文件 -->
+    <context:property-placeholder location="classpath:config.properties" ignore-unresolvable="true"/>
+
+    <!-- 扫描Bean，use-default-filters表示是否使用默认filter，设置为false时include-filter才能生效 -->
+    <context:component-scan
+            base-package="com.demos.spring.completedemo.controller,com.demos.spring.completedemo.resolver"
+            use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
+        <context:include-filter type="annotation"
+                                expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+
+    <!-- 创建静态资源处理器 -->
+    <!-- DispatcherServlet配置拦截了"/"请求，即所有请求，并将请求和注册的HandlerMapping进行匹配【按order属性值升序】 -->
+    <!-- <mvc:default-servlet-handler>标签将注册一个SimpleUrlHandlerMapping，order=2147483647，按默认路径[webapp文件夹]寻找静态文件 -->
+    <!-- 也可使用<mvc:resources>代替该标签，<mvc:resources>可以指定静态资源的url和文件路径，将注册一个SimpleUrlHandlerMapping，order=2147483646 -->
+    <mvc:default-servlet-handler/>
+
+    <!-- 注册RequestMappingHandlerMapping，处理@RequestMapping映射的请求 -->
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
+        <!-- 注册消息转换器【HttpMessageConverter】，处理@RequestBody和ResponseBody -->
+        <!-- @ResponseBody注解的方法，其返回结果不会交给ViewResolver，而是使用HttpMessageConverter进行处理后直接输出 -->
+        <mvc:message-converters>
+            <!-- 注册String类型的消息转换器，设置默认编码为UTF-8 -->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <constructor-arg value="UTF-8"/>
+            </bean>
+            <!-- 注册Json/Xml类型的消息转换器 -->
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper" ref="objectMapper"/>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!-- Jackson对象与Json/Xml转换器 -->
+    <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper">
+        <!-- 为null的字段不输出 -->
+        <property name="serializationInclusion">
+            <value type="com.fasterxml.jackson.annotation.JsonInclude.Include">NON_NULL</value>
+        </property>
+        <!-- Date格式化为字符串，默认为时间戳 -->
+        <property name="dateFormat">
+            <bean class="java.text.SimpleDateFormat">
+                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss"/>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 内容协商管理器，用于决定MimeType -->
+    <!-- 既可用于配置<mvc:annotation-driven>，又可用于配置ContentNegotiatingViewResolver -->
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <!-- 扩展名到MimeType的映射 -->
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="json" value="application/json"/>
+                <entry key="html" value="text/html"/>
+            </map>
+        </property>
+        <!-- 开启路径参数的扩展名映射，如:"/userList.json"->"application/json" -->
+        <property name="favorPathExtension" value="true"/>
+        <!-- 开启表单参数的扩展名映射，如:"/userList?format=json"->"application/json" -->
+        <property name="favorParameter" value="true"/>
+        <property name="parameterName" value="format"/>
+        <!-- 是否忽略Accept Header指定的MimeType值，默认为false -->
+        <property name="ignoreAcceptHeader" value="false"/>
+        <!-- 默认的MimeType -->
+        <property name="defaultContentType" value="application/json"/>
+    </bean>
+
+    <!-- 已注册的视图解析器会按照[order]属性依次进行匹配 -->
+    <!-- 内容协商视图解析器，根据MimeType选择合适的视图解析器来解析View，并最终选出合适的View -->
+    <bean id="contentNegotiatingViewResolver"
+          class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="order" value="0"/>
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <!-- 可以配置ViewResolver链，也可以使用默认的ViewResolver链，根据MimeType来选择 -->
+        <!-- 默认视图，每个视图都有对应的MimeType -->
+        <property name="defaultViews">
+            <list>
+                <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- FreeMarker视图解析器 -->
+    <bean id="freeMarkerViewResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="order" value="1"/>
+        <property name="viewClass" value="org.springframework.web.servlet.view.freemarker.FreeMarkerView"/>
+        <property name="contentType" value="text/html; charset=UTF-8"/>
+        <property name="exposeRequestAttributes" value="true"/>
+        <property name="exposeSessionAttributes" value="true"/>
+        <property name="exposeSpringMacroHelpers" value="true"/>
+        <property name="cache" value="true"/>
+        <property name="suffix" value=".html"/>
+    </bean>
+
+    <!-- InternalResourceViewResolver视图解析器，通常用来解析jsp -->
+    <bean id="internalResourceViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="order" value="2"/>
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!-- 文件上传处理器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="maxUploadSize" value="${web.maxUploadSize}"/>
+    </bean>
+
+    <!-- 直接定义 path->view 的映射 -->
+    <mvc:view-controller path="/" view-name="view/index"/>
+
+    <!-- 跨域访问 -->
+    <mvc:cors>
+        <mvc:mapping path="/statistics/**" allowed-origins="*" allowed-methods="GET,POST"/>
+    </mvc:cors>
+
+    <!-- 配置拦截器 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.demos.spring.completedemo.interceptor.AppInterceptor"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.demos.spring.completedemo.interceptor.LogInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+</beans>

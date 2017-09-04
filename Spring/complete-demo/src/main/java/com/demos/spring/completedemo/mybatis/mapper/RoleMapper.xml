@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demos.spring.completedemo.mybatis.mapper.RoleMapper">
+
+	<resultMap id="roleResultMap" type="RoleDO">
+		<id property="id" column="r_id" />
+		<result property="roleKey" column="r_role_key" />
+		<result property="roleName" column="r_role_name" />
+		<result property="roleDesc" column="r_role_desc" />
+		<result property="parentRole.id" column="r_parent_id" />
+		<result property="status" column="r_status" />
+		<result property="createTime" column="r_create_time" />
+		<result property="modifyTime" column="r_modify_time" />
+		<collection property="permissionList" javaType="java.util.ArrayList" resultMap="permissionResultMap" />
+	</resultMap>
+
+	<resultMap id="permissionResultMap" type="PermissionDO">
+		<id property="id" column="p_id" />
+		<result property="permissionKey" column="p_permission_key" />
+		<result property="permissionName" column="p_permission_name" />
+		<result property="permissionDesc" column="p_permission_desc" />
+		<result property="dataUrl" column="p_data_url" />
+		<result property="parentPermission.id" column="p_parent_id" />
+		<result property="permissionType" column="p_permission_type" />
+		<result property="displayStyle" column="p_display_style" />
+		<result property="displayPosition" column="p_display_position" />
+		<result property="status" column="p_status" />
+		<result property="createTime" column="p_create_time" />
+		<result property="modifyTime" column="p_modify_time" />
+	</resultMap>
+
+	<insert id="insertRole" useGeneratedKeys="true" keyProperty="id" parameterType="RoleDO">
+		insert into sys_role (
+			role_key, role_name, role_desc, parent_id, status, create_time, modify_time
+		) values (
+			#{roleKey}, #{roleName}, #{roleDesc}, #{parentRole.id}, #{status}, #{createTime}, #{modifyTime}
+		)
+	</insert>
+	
+	<delete id="deleteRoleById">
+		delete from sys_role
+		where id = #{id}
+	</delete>
+
+	<select id="listRole" resultMap="roleResultMap">
+		select
+			r.id as r_id, r.role_key as r_role_key, r.role_name as r_role_name, r.role_desc as r_role_desc,
+			r.parent_id as r_parent_id, r.status as r_status, r.create_time as r_create_time, r.modify_time as r_modify_time,
+			p.id as p_id, p.permission_key as p_permission_key, p.permission_name as p_permission_name, p.permission_desc as p_permission_desc,
+			p.data_url as p_data_url, p.parent_id as p_parent_id, p.permission_type as p_permission_type, p.display_style as p_display_style,
+			p.display_position as p_display_position, p.status as p_status, p.create_time as p_create_time, p.modify_time as p_modify_time
+		from sys_role r
+		left join sys_role_permission rp on r.id = rp.role_id
+		left join sys_permission p on rp.permission_id = p.id
+		<where>
+			<if test="roleId != null">and r.id = #{roleId}</if>
+			<if test="roleKey != null and roleKey != ''">and r.role_key = #{roleKey}</if>
+			<if test="roleName != null and roleName != ''">and r.role_name = #{roleName}</if>
+			<if test="parentId != null">and r.parent_id = #{parentId}</if>
+			<if test="userId != null">
+				and r.id in (
+					select role_id from sys_user_role where user_id = #{userId}
+				)
+			</if>
+			<if test="statusSet != null">
+				and r.status in
+				<foreach collection="statusSet" item="status" open="(" separator="," close=")">
+					#{status}
+				</foreach>
+			</if>
+			<if test="startCreateTime != null">
+				<![CDATA[ and r.create_time >= startCreateTime ]]>
+			</if>
+			<if test="endCreateTime != null">
+				<![CDATA[ and r.create_time <= endCreateTime ]]>
+			</if>
+		</where>
+	</select>
+
+	<select id="getRoleById" resultMap="roleResultMap">
+		select
+			r.id as r_id, r.role_key as r_role_key, r.role_name as r_role_name, r.role_desc as r_role_desc,
+			r.parent_id as r_parent_id, r.status as r_status, r.create_time as r_create_time, r.modify_time as r_modify_time,
+			p.id as p_id, p.permission_key as p_permission_key, p.permission_name as p_permission_name, p.permission_desc as p_permission_desc,
+			p.data_url as p_data_url, p.parent_id as p_parent_id, p.permission_type as p_permission_type, p.display_style as p_display_style,
+			p.display_position as p_display_position, p.status as p_status, p.create_time as p_create_time, p.modify_time as p_modify_time
+		from sys_role r
+		left join sys_role_permission rp on r.id = rp.role_id
+		left join sys_permission p on rp.permission_id = p.id
+		where r.id = #{id}
+	</select>
+
+	<update id="updateRole" parameterType="RoleDO">
+		update sys_role
+		<trim prefix="set" suffixOverrides=",">
+			<if test="roleKey != null and roleKey != ''">role_key = #{roleKey},</if>
+			<if test="roleName != null and roleName != ''">role_name = #{roleName},</if>
+			<if test="roleDesc != null and roleDesc != ''">role_desc = #{roleDesc},</if>
+			<if test="parentRole != null and parentRole.id != null">parent_id = #{parentRole.id},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="createTime != null">create_time = #{createTime},</if>
+			<if test="modifyTime != null">modify_time = #{modifyTime},</if>
+		</trim>
+		where id = #{id}
+	</update>
+
+	<insert id="insertUserRoles">
+		insert into sys_user_role ( user_id, role_id )
+		values
+		<foreach collection="roleIdSet" item="roleId" separator="," open="" close="">
+			( #{userId}, #{roleId} )
+		</foreach>
+	</insert>
+
+	<delete id="deleteUserRoles">
+		delete from sys_user_role
+		where id in
+		<foreach collection="idSet" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>

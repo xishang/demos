@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!-- 自定义权限验证机制 -->
+    <bean id="myAuthorizingRealm" class="com.demos.spring.completedemo.shiro.realm.MyAuthorizingRealm"/>
+
+    <!-- 自定义会话管理配置 -->
+    <bean id="mySessionManager" class="com.demos.spring.completedemo.shiro.manage.MySessionManager">
+        <!-- shiro session操作 -->
+        <property name="sessionDAO" ref="cacheSessionDAO"/>
+        <!-- sessionId对应的cookie，默认为name="JSESSIONID"的cookie -->
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+        <!-- 会话超时时间，单位：毫秒  -->
+        <property name="globalSessionTimeout" value="${session.timeout}"/>
+        <!-- 定时清理失效会话, 清理用户直接关闭浏览器造成的孤立会话   -->
+        <property name="sessionValidationInterval" value="${session.timeoutClean}"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+    </bean>
+
+    <!-- shiro的session操作工具类 -->
+    <bean id="cacheSessionDAO" class="com.demos.spring.completedemo.shiro.manage.CacheSessionDAO">
+        <!-- sessionId生成器 -->
+        <property name="sessionIdGenerator" ref="mySessionIdGenerator"/>
+        <!-- 缓存管理器，此处可以不用配置 -->
+        <!-- DefaultWebSecurityManager中配置了CacheManager，他会自动把CacheManager传给实现了CacheManagerAware的SessionDAO -->
+        <!--<property name="cacheManager" ref="redisCacheManager"/>-->
+    </bean>
+    <bean id="mySessionIdGenerator" class="com.demos.spring.completedemo.shiro.manage.MySessionIdGenerator"/>
+
+    <!-- sessionId对应的cookie -->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <!-- cookie名 -->
+        <constructor-arg value="sid"/>
+        <property name="httpOnly" value="true"/>
+        <!-- 过期时间，单位: 秒，默认为-1，即关闭浏览器时失效 -->
+        <property name="maxAge" value="-1"/>
+    </bean>
+
+    <!-- rememberMe对应的cookie -->
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe"/>
+        <property name="httpOnly" value="true"/>
+        <!-- 过期时间: 7天 -->
+        <property name="maxAge" value="604800"/>
+    </bean>
+
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <!-- cookie加密秘钥，默认AES算法秘钥 -->
+        <property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
+
+    <!-- 缓存管理器 -->
+    <bean id="redisCacheManager" class="com.demos.spring.completedemo.shiro.manage.RedisCacheManager">
+        <property name="cacheKeyPrefix" value=""/>
+    </bean>
+
+    <!-- 安全管理器 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="myAuthorizingRealm"/>
+        <property name="sessionManager" ref="mySessionManager"/>
+        <property name="rememberMeManager" ref="rememberMeManager"/>
+        <property name="cacheManager" ref="redisCacheManager"/>
+    </bean>
+
+    <!-- 自定义验证过滤链 -->
+    <bean id="chainDefinitionSectionMetaSource"
+          class="com.demos.spring.completedemo.shiro.chain.ChainDefinitionSectionMetaSource">
+        <property name="filterChainDefinitions">
+            <value>
+                <!--/user/login=anon
+                /user/register=anon
+                /view/**=anon
+                /user/list=authc
+                /user/info=access
+                /**=user
+                /logout=logout-->
+                /**=anon
+            </value>
+        </property>
+    </bean>
+
+    <!-- 自定义Shiro过滤器 -->
+    <bean id="myAccessControlFilter" class="com.demos.spring.completedemo.shiro.filter.MyAccessControlFilter" />
+
+    <!-- shiro的web过滤器 -->
+    <!-- 在web.xml中注册的DelegatingFilterProxy，在spring容器中找名为shiroFilter的bean，并委托该bean执行Filter操作 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/view/403"/>      <!-- 登录请求地址 -->
+        <property name="successUrl" value="/view/index"/>    <!-- 配置我们在登录页登录成功后的跳转地址 -->
+        <!-- 如果您请求的资源不再您的权限范围，则跳转到/403请求地址。该属性只有AuthorizationFilter[perms，roles，ssl，rest，port]才能生效 -->
+        <property name="unauthorizedUrl" value="/view/403"/>
+        <property name="filterChainDefinitionMap" ref="chainDefinitionSectionMetaSource"/>
+        <property name="filters">
+            <util:map>
+                <!-- 定义Filter别名，用于过滤链 -->
+                <entry key="access" value-ref="myAccessControlFilter"/>
+            </util:map>
+        </property>
+    </bean>
+
+    <!-- 基于AOP的方法级别的权限管理，需要开启AOP -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+</beans>

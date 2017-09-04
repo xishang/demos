@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demos.spring.completedemo.mybatis.mapper.PermissionMapper">
+
+	<resultMap id="roleResultMap" type="RoleDO">
+		<id property="id" column="r_id" />
+		<result property="roleKey" column="r_role_key" />
+		<result property="roleName" column="r_role_name" />
+		<result property="roleDesc" column="r_role_desc" />
+		<result property="parentRole.id" column="r_parent_id" />
+		<result property="status" column="r_status" />
+		<result property="createTime" column="r_create_time" />
+		<result property="modifyTime" column="r_modify_time" />
+	</resultMap>
+
+	<resultMap id="permissionResultMap" type="PermissionDO">
+		<id property="id" column="p_id" />
+		<result property="permissionKey" column="p_permission_key" />
+		<result property="permissionName" column="p_permission_name" />
+		<result property="permissionDesc" column="p_permission_desc" />
+		<result property="dataUrl" column="p_data_url" />
+		<result property="parentPermission.id" column="p_parent_id" />
+		<result property="permissionType" column="p_permission_type" />
+		<result property="displayStyle" column="p_display_style" />
+		<result property="displayPosition" column="p_display_position" />
+		<result property="status" column="p_status" />
+		<result property="createTime" column="p_create_time" />
+		<result property="modifyTime" column="p_modify_time" />
+		<collection property="roleList" javaType="java.util.ArrayList" resultMap="roleResultMap" />
+	</resultMap>
+
+	<insert id="insertPermission" useGeneratedKeys="true" keyProperty="id" parameterType="PermissionDO">
+		insert into sys_permission (
+			permission_key, permission_name, permission_desc, data_url, parent_id, permission_type,
+			display_style, display_position, status, create_time, modify_time
+		) values (
+			#{permissionKey}, #{permissionName}, #{permissionDesc}, #{dataUrl}, #{parentPermission.id}, {permissionType},
+			#{displayStyle}, #{displayPosition}, #{status}, #{createTime}, #{modifyTime}
+		)
+	</insert>
+	
+	<delete id="deletePermissionById">
+		delete from sys_permission
+		where id = #{id}
+	</delete>
+
+	<select id="listPermission" resultMap="permissionResultMap">
+		select
+			p.id as p_id, p.permission_key as p_permission_key, p.permission_name as p_permission_name, p.permission_desc as p_permission_desc,
+			p.data_url as p_data_url, p.parent_id as p_parent_id, p.permission_type as p_permission_type, p.display_style as p_display_style,
+			p.display_position as p_display_position, p.status as p_status, p.create_time as p_create_time, p.modify_time as p_modify_time,
+			r.id as r_id, r.role_key as r_role_key, r.role_name as r_role_name, r.role_desc as r_role_desc,
+			r.parent_id as r_parent_id, r.status as r_status, r.create_time as r_create_time, r.modify_time as r_modify_time
+		from sys_permission p
+		left join sys_role_permission rp on p.id = rp.permission_id
+		left join sys_role r on rp.role_id = r.id
+		<where>
+			<if test="permissionId != null">and p.id = #{permissionId}</if>
+			<if test="permissionKey != null and permissionKey != ''">and p.permission_key = #{permissionKey}</if>
+			<if test="permissionName != null and permissionName != ''">and p.permission_name = #{permissionName}</if>
+			<if test="parentId != null">and p.parent_id = #{parentId}</if>
+			<if test="userId != null">
+				and p.id in (
+					select rp.permission_id
+					from sys_user_role ur
+					join sys_role_permission rp on ur.role_id = rp.role_id
+					where ur.user_id = #{userId}
+				)
+			</if>
+			<if test="roleId != null">
+				and p.id in (
+					select permission_id from sys_role_permission where role_id = #{id}
+				)
+			</if>
+			<if test="permissionTypeSet != null">
+				and p.permission_type in
+				<foreach collection="permissionTypeSet" item="permissionType" open="(" separator="," close=")">
+					#{permissionType}
+				</foreach>
+			</if>
+			<if test="statusSet != null">
+				and p.status in
+				<foreach collection="statusSet" item="status" open="(" separator="," close=")">
+					#{status}
+				</foreach>
+			</if>
+			<if test="startCreateTime != null">
+				<![CDATA[ and p.create_time >= startCreateTime ]]>
+			</if>
+			<if test="endCreateTime != null">
+				<![CDATA[ and p.create_time <= endCreateTime ]]>
+			</if>
+		</where>
+	</select>
+
+	<select id="getPermissionById" resultMap="permissionResultMap">
+		select
+			p.id as p_id, p.permission_key as p_permission_key, p.permission_name as p_permission_name, p.permission_desc as p_permission_desc,
+			p.data_url as p_data_url, p.parent_id as p_parent_id, p.permission_type as p_permission_type, p.display_style as p_display_style,
+			p.display_position as p_display_position, p.status as p_status, p.create_time as p_create_time, p.modify_time as p_modify_time,
+			r.id as r_id, r.role_key as r_role_key, r.role_name as r_role_name, r.role_desc as r_role_desc,
+			r.parent_id as r_parent_id, r.status as r_status, r.create_time as r_create_time, r.modify_time as r_modify_time
+		from sys_permission p
+		left join sys_role_permission rp on p.id = rp.permission_id
+		left join sys_role r on rp.role_id = r.id
+		where p.id = #{id}
+	</select>
+
+	<update id="updatePermission" parameterType="PermissionDO">
+		update sys_permission
+		<trim prefix="set" suffixOverrides=",">
+			<if test="permissionKey != null and permissionKey != ''">permission_key = #{permissionKey},</if>
+			<if test="permissionName != null and permissionName != ''">permission_name = #{permissionName},</if>
+			<if test="permissionDesc != null and permissionDesc != ''">permission_desc = #{permissionDesc},</if>
+			<if test="dataUrl != null and dataUrl != ''">data_url = #{dataUrl},</if>
+			<if test="parentPermission != null and parentPermission.id != null">parent_id = #{parentPermission.id},</if>
+			<if test="permissionType != null">permission_type = #{permissionType},</if>
+			<if test="displayStyle != null and displayStyle != ''">display_style = #{displayStyle},</if>
+			<if test="displayPosition != null">display_position = #{displayPosition},</if>
+			<if test="status != null">status = #{status},</if>
+			<if test="createTime != null">create_time = #{createTime},</if>
+			<if test="modifyTime != null">modify_time = #{modifyTime},</if>
+		</trim>
+		where id = #{id}
+	</update>
+
+	<insert id="insertRolePermissions">
+		insert into sys_role_permission ( role_id, permission_id )
+		values
+		<foreach collection="permissionIdSet" item="permissionId" separator="," open="" close="">
+			( #{roleId}, #{permissionId} )
+		</foreach>
+	</insert>
+
+	<delete id="deleteRolePermissions">
+		delete from sys_role_permission
+		where id in
+		<foreach collection="idSet" item="id" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+</mapper>
