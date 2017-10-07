@@ -12,23 +12,22 @@ public class AppInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        final String url = request.getRequestURI();
-
-        // 暂时屏蔽
-        if (!url.isEmpty()) {
-            return super.preHandle(request, response, handler);
+        // 允许跨域访问，也可以在spring配置文件中配置<mvc:cors>
+        if (request.getHeader("Origin") != null) {
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        } else {
+            response.setHeader("Access-Control-Allow-Origin", "*");
         }
-
-        // "/data"路径的请求允许跨域访问，也可以在spring配置文件中配置<mvc:cors>
-        if (url.startsWith("/data")) {
-            if(request.getHeader("Origin")!=null){
-                response.addHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
-            }else{
-                response.addHeader("Access-Control-Allow-Origin", "*");
-            }
-            response.addHeader("Access-Control-Allow-Credentials", "true");
+        // 支持"credentials", 跨域时携带cookie
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type,Origin,Accept");
+        // 若为preflight请求[OPTIONS], 则直接返回
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        } else {
+            return true;
         }
-        return super.preHandle(request, response, handler);
     }
 
 }
