@@ -1,0 +1,19 @@
+server:
+  port: 8001
+
+##  config.server: 两种配置方式
+### 1.git: 使用git配置文件
+### 2.native.search-locations: 使用本地配置文件
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/xishang/config-center
+          searchPaths: data
+
+security:
+  user:
+    name: admin
+    password: 123456
