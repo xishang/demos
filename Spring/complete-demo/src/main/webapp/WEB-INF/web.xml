@@ -17,6 +17,12 @@
         <param-value>classpath:logback.xml</param-value>
     </context-param>
 
+    <!-- Spring Cloud Config 启动容器 -->
+    <context-param>
+        <param-name>contextClass</param-name>
+        <param-value>com.demos.spring.completedemo.config.CloudConfigurableWebApplicationContext</param-value>
+    </context-param>
+
     <!-- Spring容器监听器【必须】，负责监听web容器启动和关闭的事件 -->
     <listener>
         <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
