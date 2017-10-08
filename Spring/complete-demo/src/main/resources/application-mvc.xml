@@ -120,8 +120,11 @@
         <property name="maxUploadSize" value="${web.maxUploadSize}"/>
     </bean>
 
+    <!-- Swagger配置文件必须在SpringMVC上下文定义 -->
+    <bean class="com.demos.spring.completedemo.config.SwaggerConfig" />
+
     <!-- 直接定义 path->view 的映射 -->
-    <mvc:view-controller path="/" view-name="view/index"/>
+    <mvc:view-controller path="/" view-name="/index"/>
 
     <!-- 跨域访问 -->
     <mvc:cors>

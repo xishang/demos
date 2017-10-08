@@ -3,9 +3,11 @@ package com.demos.spring.completedemo.controller;
 import com.demos.spring.completedemo.bean.ResponseResult;
 import com.demos.spring.completedemo.bean.SimplePageInfo;
 import com.demos.spring.completedemo.bean.UserDO;
+import com.demos.spring.completedemo.bean.UserVO;
 import com.demos.spring.completedemo.exception.BusinessException;
 import com.demos.spring.completedemo.exception.ErrorEnum;
 import com.demos.spring.completedemo.service.UserService;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.LockedAccountException;
@@ -14,6 +16,7 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,7 +43,7 @@ public class UserController {
      * @param session    当前请求的session
      * @return
      */
-    @RequestMapping("/login")
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
     public ResponseResult<String> login(@RequestParam("username") String username, @RequestParam("password") String password,
                                         @RequestParam(value = "rememberMe", required = false, defaultValue = "false") Boolean rememberMe,
                                         HttpSession session) {
@@ -65,12 +68,14 @@ public class UserController {
     /**
      * 用户注册接口
      *
-     * @param user 封装了用户信息
+     * @param userVO 封装了用户信息
      * @return
      */
-    @RequestMapping("/register")
-    public ResponseResult register(UserDO user) {
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    public ResponseResult register(UserVO userVO) {
         try {
+            UserDO user = new UserDO();
+            BeanUtils.copyProperties(user, userVO);
             // 原始密码，保存用户时对密码进行了加密处理
             String originPassword = user.getPassword();
             userService.saveUser(user);
@@ -80,10 +85,12 @@ public class UserController {
             return new ResponseResult(ErrorEnum.SUCCESS);
         } catch (BusinessException e) {
             return new ResponseResult(e.getErrorEnum());
+        } catch (Exception e) {
+            return new ResponseResult(ErrorEnum.SYSTEM_ERROR);
         }
     }
 
-    @RequestMapping("/list")
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     public ResponseResult<SimplePageInfo<UserDO>> listUsers(int page, int size) {
         logger.info("------->getUserList, page={}, size={}", page, size);
         List<UserDO> userList = new ArrayList<>();
