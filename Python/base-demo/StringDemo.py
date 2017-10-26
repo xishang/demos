@@ -35,15 +35,17 @@ rep = (1.235, 1.235)
 print(formatStr % rep)
 
 # string常量[2.x]
-# string.digits         包含数字0~9的字符串
-# string.letters        包含所有字母(大写和小写)的字符串
-# string.lowercase      包含所有小写字母的字符串
-# string.uppercase      包含所有大写字母的字符串
-# string.printable      包含所有可打印字符的字符串
-# string.punctuation    包含所有标点的字符串
+# string.digits             包含数字0~9的字符串
+# string.ascii_letters      包含所有字母(大写和小写)的字符串
+# string.ascii_lowercase    包含所有小写字母的字符串
+# string.ascii_uppercase    包含所有大写字母的字符串
+# string.printable          包含所有可打印字符的字符串
+# string.punctuation        包含所有标点的字符串
 
 # 输出：0123456789
 print(string.digits)
+# 输出：abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
+print(string.ascii_letters)
 
 # find(): 查询子串并返回子串最左端索引，没有找到则返回-1 ----------------------------------------
 longStr = 'this is a python class'
@@ -74,11 +76,4 @@ print(longStr.replace("is", "#"))
 strDemo = ' hello, world  '
 # 输出：--hello, world--
 print('--'+strDemo.strip()+'--')
-# translate(): 替换字符串(处理单个字符)，需要先使用string.maketrans()方法创建一张转换表 -----------
-# strDemo = 'This a apple'
-# table = string.maketrans('a', 'A')
-# 输出：This A Apple
-# print(strDemo.translate(table))
-
-
 
