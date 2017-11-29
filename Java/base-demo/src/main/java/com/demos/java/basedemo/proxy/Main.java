@@ -49,7 +49,7 @@ public class Main {
     public static void outputJdkProxyFile() throws Exception {
         byte[] proxyClassFile = ProxyGenerator.generateProxyClass(
                 "com.test.$proxy0.class", new Class[]{Teacher.class}, Modifier.FINAL);
-        FileOutputStream out = new FileOutputStream(new File("C:\\Users\\xs\\Desktop\\dats\\$proxy0.class"));
+        FileOutputStream out = new FileOutputStream(new File("/Users/xishang/temp/$proxy0.class"));
         out.write(proxyClassFile);
         out.flush();
         out.close();

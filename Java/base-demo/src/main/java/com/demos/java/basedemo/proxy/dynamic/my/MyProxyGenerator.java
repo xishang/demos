@@ -26,7 +26,7 @@ public class MyProxyGenerator {
     // 动态代理类文件索引
     public static final AtomicLong INDEX_GENERATOR = new AtomicLong();
     // 动态代理生成文件临时目录
-    public static final String PROXY_CLASS_FILE_PATH = "D:\\temp";
+    public static final String PROXY_CLASS_FILE_PATH = "/Users/xishang/temp";
 
     /**
      * 生成代理类并加载到JVM

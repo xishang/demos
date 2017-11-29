@@ -26,7 +26,7 @@ public class MyEnhancer extends Enhancer {
         FileOutputStream out = null;
         try {
             byte[] b = getStrategy().generate(this);
-            out = new FileOutputStream(new File("C:\\Users\\xs\\Desktop\\dats\\$proxy1.class"));
+            out = new FileOutputStream(new File("/Users/xishang/temp/$proxy1.class"));
             out.write(b);
             out.flush();
         } catch (Exception e) {
