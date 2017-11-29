@@ -12,7 +12,7 @@
     <!-- 加载属性配置文件 -->
     <context:property-placeholder location="classpath:config.properties" ignore-unresolvable="true"/>
 
-    <!-- 扫描Bean，use-default-filters表示是否使用默认filter，设置为false时include-filter才能生效 -->
+    <!-- 扫描Bean，use-default-filters表示是否使用默认filter(包括Component, @Repository, @Service和@Controller), 设置为false, 只使用include-filter指定的filter -->
     <context:component-scan
             base-package="com.demos.spring.completedemo.controller,com.demos.spring.completedemo.resolver"
             use-default-filters="false">
