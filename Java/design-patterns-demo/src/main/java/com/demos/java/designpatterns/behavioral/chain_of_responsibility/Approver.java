@@ -9,6 +9,7 @@ package com.demos.java.designpatterns.behavioral.chain_of_responsibility;
  * 纯的责任链模式: 处理者要么承担全部责任, 要么把责任推给下家
  * 优点: 解耦请求和处理者, 很容易添加新的处理者
  * 缺点: 较长的责任链会导致性能低下, 建链不当可能造成死循环
+ * <p>
  * 抽象处理器类: 审批人
  */
 public abstract class Approver {

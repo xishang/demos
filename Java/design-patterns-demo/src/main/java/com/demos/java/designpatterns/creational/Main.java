@@ -16,6 +16,8 @@ import com.demos.java.designpatterns.creational.singleton.LazySingleton;
  * @author xishang
  * @version 1.0
  * @date 2017/12/25
+ * <p>
+ * 创建型
  */
 public class Main {
 
@@ -43,7 +45,6 @@ public class Main {
         analysis1.display();
         Document analysis2 = PrototypeManager.getInstance().clone("analysis");
         analysis2.display();
-
         Document analysis3 = PrototypeManager.getInstance().deepClone("analysis");
         analysis3.display();
         Document analysis4 = PrototypeManager.getInstance().deepClone("analysis");

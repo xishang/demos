@@ -6,8 +6,9 @@ package com.demos.java.designpatterns.behavioral.template_method;
  * @date 2017/12/30
  * <p>
  * 模版方法模式: 定义一个算法的骨架, 模版类中实现不变的部分, 具体子类实现变化的部分
- * 抽象模版类: 账户类
  * 典型应用: Servlet(service, doGet, doPost等方法)
+ * <p>
+ * 抽象模版类: 账户类
  */
 public abstract class Account {
 

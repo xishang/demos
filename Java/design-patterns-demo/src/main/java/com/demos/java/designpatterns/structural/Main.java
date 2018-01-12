@@ -21,6 +21,8 @@ import com.demos.java.designpatterns.structural.proxy.Subject;
  * @author xishang
  * @version 1.0
  * @date 2017/12/22
+ * <p>
+ * 结构型
  */
 public class Main {
 
