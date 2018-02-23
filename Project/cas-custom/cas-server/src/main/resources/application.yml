@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: cas-server
+  profiles:
+    active: dev
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  freemarker:
+    cache: false
+

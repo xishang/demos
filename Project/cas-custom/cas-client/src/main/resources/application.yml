@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: cas-client
+  profiles:
+    active: dev
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+cas:
+  server: http://localhost:8080
+
