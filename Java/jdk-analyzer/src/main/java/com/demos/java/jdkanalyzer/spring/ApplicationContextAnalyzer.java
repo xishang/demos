@@ -33,7 +33,7 @@ import java.util.List;
  * -> 2.获取BeanFactory: 加载BeanDefinition
  * -> 3.初始化BeanFactory: 设置ClassLoader, 添加ApplicationContextAwareProcessor后置处理器, 设置忽略自动注入的Aware接口
  * -> 4.postProcessBeanFactory()钩子方法: 如spring-mybatis在这里加载mapper
- * -> 5.创建并注册所有BeanFactoryPostProcessor
+ * -> 5.BeanFactoryPostProcessor后置处理器
  * -> 6.注册Bean后置处理器BeanPostProcessor: PriorityOrdered, Ordered, 无序的BeanPostProcessor
  * === 注册后置处理器ApplicationListenerDetector在bean销毁时移除广播监听
  * -> 7.初始化上下文中的消息源: 即不同语言的消息(国际化)
@@ -71,8 +71,8 @@ public abstract class ApplicationContextAnalyzer {
                 // 钩子方法: BeanFactory后置处理, BeanFactory初始化之后调用
                 postProcessBeanFactory(beanFactory);
 
-                // 从加载的Bean中找出所有未处理过的BeanFactory(如:SqlSessionFactory), 并执行初始化
-                // 初始化并执行BeanFactoryPostProcessor后置处理器
+                // 初始化并执行BeanFactoryPostProcessor后置处理器, 包括BeanDefinitionRegistryPostProcessor.postProcessBeanDefinitionRegistry()
+                // MapperScannerConfigurer.postProcessBeanDefinitionRegistry(): 扫描mapper的basePackage路径并添加Mapper到Configuration
                 invokeBeanFactoryPostProcessors(beanFactory);
 
                 // 注册Bean后置处理器BeanPostProcessor: PriorityOrdered, Ordered, 无序的BeanPostProcessor
