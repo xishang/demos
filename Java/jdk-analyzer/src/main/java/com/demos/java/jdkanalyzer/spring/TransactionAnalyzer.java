@@ -76,6 +76,28 @@ import java.util.ArrayList;
  * -> 5.若抛出异常, 则检查是否需要回滚, 如果需要回滚则执行事务回滚, 否则提交当前事务
  * -> 6.若方法正常返回则提交事务
  * -> 7.将原来的事务信息设置到当前线程以便恢复之前的事务(处理嵌套事务)
+ * ===== 6.开启事务流程:
+ * -> 1.获取数据库连接
+ * -> 2.设置并返回当前的隔离级别
+ * -> 3.取消自动提交事务, 使用手动提交
+ * -> 4.准备事务连接: 如果设置了事务为`readOnly`, 则会执行SQL语句: SET TRANSACTION READ ONLY
+ * -> 5.设置状态表明当前正在事务中
+ * -> 6.设置超时时间(timeout)
+ * -> 7.保存连接的holder到当前线程
+ * ===== 7.七种传播行为:
+ * -> PROPAGATION_REQUIRED: 需要一个事务, 如果当前存在事务, 就加入该事务, 否则创建一个新事务(最常使用)
+ * -> PROPAGATION_SUPPORTS: 支持当前事务, 如果当前存在事务, 就加入该事务, 否则以非事务运行
+ * -> PROPAGATION_MANDATORY: 当前必须存在事务, 如果当前存在事务, 就加入该事务, 否则抛出异常
+ * -> PROPAGATION_REQUIRES_NEW: 需要一个新事务, 无论当前是否存在事务, 都会创建一个新事务
+ * -> PROPAGATION_NOT_SUPPORTED: 不支持事务, 以非事务方式运行, 如果当前存在事务, 就把当前事务挂起
+ * -> PROPAGATION_NEVER: 禁止事务, 以非事务方式运行, 如果当前存在事务, 则抛出异常
+ * -> PROPAGATION_NESTED: 嵌套事务, 如果当前存在事务, 则在嵌套事务内运行, 否则创建一个新事务
+ * === 当前存在事务的处理方式:
+ * -> PROPAGATION_NEVER: 不允许存在事务, 抛出异常
+ * -> PROPAGATION_NOT_SUPPORTED: 不支持事务, 将当前事务挂起
+ * -> PROPAGATION_REQUIRES_NEW: 需要新的事务, 挂起当前事务, 并开启一个新的事务
+ * -> PROPAGATION_NESTED: 嵌套事务
+ * -> PROPAGATION_SUPPORTS or PROPAGATION_REQUIRED: 加入当前事务, 如果当前事务的隔离级别和自己的不一致, 则抛出异常
  */
 public class TransactionAnalyzer {
 
@@ -735,7 +757,7 @@ public class TransactionAnalyzer {
             throw new InvalidTimeoutException("Invalid transaction timeout", definition.getTimeout());
         }
 
-        // No existing transaction found -> check propagation behavior to find out how to proceed.
+        // PROPAGATION_MANDATORY: 必须存在事务且当前不存在事务, 抛出异常
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_MANDATORY) {
             throw new IllegalTransactionStateException(
                     "No existing transaction found for transaction marked with propagation 'mandatory'");
@@ -772,7 +794,8 @@ public class TransactionAnalyzer {
     }
 
     /**
-     * 7种传播行为:
+     * 处理当前存在事务的情况:
+     * === 7种传播行为:
      * -> PROPAGATION_REQUIRED: 需要一个事务, 如果当前存在事务, 就加入该事务, 否则创建一个新事务(最常使用)
      * -> PROPAGATION_SUPPORTS: 支持当前事务, 如果当前存在事务, 就加入该事务, 否则以非事务运行
      * -> PROPAGATION_MANDATORY: 当前必须存在事务, 如果当前存在事务, 就加入该事务, 否则抛出异常
@@ -780,16 +803,24 @@ public class TransactionAnalyzer {
      * -> PROPAGATION_NOT_SUPPORTED: 不支持事务, 以非事务方式运行, 如果当前存在事务, 就把当前事务挂起
      * -> PROPAGATION_NEVER: 禁止事务, 以非事务方式运行, 如果当前存在事务, 则抛出异常
      * -> PROPAGATION_NESTED: 嵌套事务, 如果当前存在事务, 则在嵌套事务内运行, 否则创建一个新事务
+     * === 当前存在事务的处理方式:
+     * -> PROPAGATION_NEVER: 不允许存在事务, 抛出异常
+     * -> PROPAGATION_NOT_SUPPORTED: 不支持事务, 将当前事务挂起
+     * -> PROPAGATION_REQUIRES_NEW: 需要新的事务, 挂起当前事务, 并开启一个新的事务
+     * -> PROPAGATION_NESTED: 嵌套事务
+     * -> PROPAGATION_SUPPORTS or PROPAGATION_REQUIRED: 加入当前事务, 如果当前事务的隔离级别和自己的不一致, 则抛出异常
      */
     private TransactionStatus handleExistingTransaction(
             TransactionDefinition definition, Object transaction, boolean debugEnabled)
             throws TransactionException {
 
+        // PROPAGATION_NEVER: 不允许存在事务, 抛出异常
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
             throw new IllegalTransactionStateException(
                     "Existing transaction found for transaction marked with propagation 'never'");
         }
 
+        // PROPAGATION_NOT_SUPPORTED: 不支持事务, 将当前事务挂起
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
             if (debugEnabled) {
                 logger.debug("Suspending current transaction");
@@ -800,12 +831,13 @@ public class TransactionAnalyzer {
                     definition, null, false, newSynchronization, debugEnabled, suspendedResources);
         }
 
+        // PROPAGATION_REQUIRES_NEW: 需要新的事务, 挂起当前事务, 并开启一个新的事务
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
             if (debugEnabled) {
                 logger.debug("Suspending current transaction, creating new transaction with name [" +
                         definition.getName() + "]");
             }
-            AbstractPlatformTransactionManager.SuspendedResourcesHolder suspendedResources = suspend(transaction);
+            SuspendedResourcesHolder suspendedResources = suspend(transaction);
             try {
                 boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
                 DefaultTransactionStatus status = newTransactionStatus(
@@ -820,6 +852,7 @@ public class TransactionAnalyzer {
             }
         }
 
+        // PROPAGATION_NESTED: 嵌套事务
         if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NESTED) {
             if (!isNestedTransactionAllowed()) {
                 throw new NestedTransactionNotSupportedException(
@@ -855,6 +888,7 @@ public class TransactionAnalyzer {
         if (debugEnabled) {
             logger.debug("Participating in existing transaction");
         }
+        // PROPAGATION_SUPPORTS or PROPAGATION_REQUIRED: 加入当前事务, 如果当前事务的隔离级别和自己的不一致, 则抛出异常
         if (isValidateExistingTransaction()) {
             if (definition.getIsolationLevel() != TransactionDefinition.ISOLATION_DEFAULT) {
                 Integer currentIsolationLevel = TransactionSynchronizationManager.getCurrentTransactionIsolationLevel();
@@ -931,7 +965,14 @@ public class TransactionAnalyzer {
     }
 
     /**
-     * 开始一个事务: 设置隔离级别(isolation)
+     * 开始一个事务: 设置隔离级别(isolation):
+     * -> 1.获取数据库连接
+     * -> 2.设置并返回当前的隔离级别
+     * -> 3.取消自动提交事务, 使用手动提交
+     * -> 4.准备事务连接: 如果设置了事务为`readOnly`, 则会执行SQL语句: SET TRANSACTION READ ONLY
+     * -> 5.设置状态表明当前正在事务中
+     * -> 6.设置超时时间(timeout)
+     * -> 7.保存连接的holder到当前线程
      */
     protected void doBegin(Object transaction, TransactionDefinition definition) {
         DataSourceTransactionObject txObject = (DataSourceTransactionObject) transaction;

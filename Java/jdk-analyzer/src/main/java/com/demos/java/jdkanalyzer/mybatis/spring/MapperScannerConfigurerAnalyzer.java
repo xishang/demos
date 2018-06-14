@@ -31,6 +31,7 @@ import java.util.Map;
  * -> 1.此时PropertyResourceConfigurer还没有加载属性, 因此所有的属性尚未解析, 包括在mybatis配置文件中使用的属性以及诸如DataSource配置使用的`${jdbc.url}`等重要属性
  * -> 2.由于此时像`${jdbc.url}`这样的属性值尚未被解析替换, 因此若直接设置`sqlSessionFactoryBean`会导致其提前被初始化, 此时会直接使用`${jdbc.url}`字面量而不是对应的属性值
  * -> 3.基于原因2, 选择注入`sqlSessionFactoryBeanName`, 在需要的时候才会初始化`sqlSessionFactoryBean`, 此时`${jdbc.url}`等属性值已被加载并解析替换
+ * === 并且, 如果有多个DataSource, 选择类型自动注入的话很可能会失败
  * ===== 重要属性:
  * -> basePackage: Mapper接口路径
  * -> sqlSessionFactoryBeanName: `sqlSessionFactoryBean`的`beanName`, 为避免提前初始化, 这里不建议直接注入`sqlSessionFactoryBean`
