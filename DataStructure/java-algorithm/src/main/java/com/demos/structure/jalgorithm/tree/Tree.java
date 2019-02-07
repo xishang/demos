@@ -1,7 +1,5 @@
 package com.demos.structure.jalgorithm.tree;
 
-import java.util.Iterator;
-
 public interface Tree<T> extends Iterable<T> {
 
     boolean isEmpty();
@@ -19,11 +17,5 @@ public interface Tree<T> extends Iterable<T> {
     void insert(T data);
 
     void remove(T data);
-
-    Iterator<T> preorderTraversal();
-
-    Iterator<T> inorderTraversal();
-
-    Iterator<T> postorderTraversal();
 
 }

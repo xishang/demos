@@ -16,10 +16,10 @@ public class Director {
     }
 
     public Product construct() {
-        builder.buildPartA();
-        builder.buildPartB();
-        builder.buildPartC();
-        return builder.getResult();
+        return builder.buildPartA()
+                .buildPartB()
+                .buildPartC()
+                .build();
     }
 
 }

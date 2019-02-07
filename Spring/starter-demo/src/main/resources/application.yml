@@ -1,0 +1,88 @@
+server:
+  port: 8080
+
+management:
+  security:
+    enabled: false
+
+#server:
+#  port: 8443
+#  ssl:
+#    key-store: classpath:security/sslkeys.jks
+#    key-store-password: 123456
+#    key-password: 123456
+
+spring:
+  datasource:
+    druid:
+      # 配置JDBC
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/e_mall?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull
+      username: root
+      password: 123456
+      # 配置连接池
+      initial-size: 1
+      min-idle: 3
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 30000
+      remove-abandoned: false
+      remove-abandoned-timeout: 1800
+      log-abandoned: true
+      validation-query: select 'x'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      filter:
+        stat:
+          log-slow-sql: true
+          slow-sql-millis: 5000
+          enabled: true
+        wall:
+          enabled: true
+          config:
+            multi-statement-allow: true
+      # 配置WebStatFilter
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: '*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*'
+        session-stat-enable: true
+        session-stat-max-count: 10
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: true
+        login-username: admin
+        login-password: admin
+      aop-patterns: com.demo.spring.starterdemo.service.*,com.demo.spring.starterdemo.mapper.*
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+
+# MyBatis通用Mapper
+mybatis:
+  type-aliases-package: com.demo.spring.starterdemo.domain
+  mapper-locations: classpath:mapper/*.xml
+  mapper:
+    mappers: com.demo.spring.starterdemo.util.BaseMapper
+    identity: MYSQL
+    not-empty: false
+  configuration:
+    map-underscore-to-camel-case: true
+
+
+# 分页插件
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
+login:
+  user-id: 12
+  username: james
+  password: 123456
+
+flyway:
+  # metadata table(schema_version)不存在时自动创建
+  baseline-on-migrate: true

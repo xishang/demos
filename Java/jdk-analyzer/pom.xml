@@ -100,6 +100,12 @@
             <version>4.0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>8.0.52</version>
+        </dependency>
+
     </dependencies>
 
     <build>

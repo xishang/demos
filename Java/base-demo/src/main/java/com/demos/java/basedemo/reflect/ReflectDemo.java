@@ -84,6 +84,8 @@ public class ReflectDemo {
         Class<?>[] exceptionTypes = method.getExceptionTypes();
         // 注解列表
         Annotation[] annotations = method.getAnnotations();
+        // 获取指定类型注解
+        Resource resource = method.getAnnotation(Resource.class);
         // 是否存在注解
         boolean isResource = method.isAnnotationPresent(Resource.class);
         // 执行方法

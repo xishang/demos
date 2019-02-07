@@ -1,9 +1,12 @@
 package com.demos.structure.jalgorithm.tree;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * AVL树
+ *
  * @param <T>
  */
 public class AvlTree<T extends Comparable<T>> implements Tree<T> {
@@ -13,6 +16,7 @@ public class AvlTree<T extends Comparable<T>> implements Tree<T> {
         Node<T> left; // 左节点
         Node<T> right; // 右节点
         int height; // 节点高度
+
         public Node(T data, Node<T> left, Node<T> right) {
             this.data = data;
             this.left = left;
@@ -221,7 +225,6 @@ public class AvlTree<T extends Comparable<T>> implements Tree<T> {
         return balance(node);
     }
 
-    @Override
     public Iterator<T> preorderTraversal() {
         List<T> list = preorderList(root, new ArrayList<>());
         return list.iterator();
@@ -242,7 +245,6 @@ public class AvlTree<T extends Comparable<T>> implements Tree<T> {
         return list;
     }
 
-    @Override
     public Iterator<T> inorderTraversal() {
         List<T> list = inorderList(root, new ArrayList<>());
         return list.iterator();
@@ -259,7 +261,6 @@ public class AvlTree<T extends Comparable<T>> implements Tree<T> {
         return list;
     }
 
-    @Override
     public Iterator<T> postorderTraversal() {
         List<T> list = postorderList(root, new ArrayList<>());
         return list.iterator();
@@ -279,19 +280,6 @@ public class AvlTree<T extends Comparable<T>> implements Tree<T> {
     @Override
     public Iterator<T> iterator() {
         return inorderTraversal();
-    }
-
-    public static void main(String[] args) {
-        Tree<Integer> tree = new AvlTree<>();
-        tree.insert(1);
-        tree.insert(2);
-        tree.insert(3);
-        tree.insert(4);
-        tree.insert(5);
-        Iterator<Integer> i = tree.inorderTraversal();
-        while (i.hasNext()) {
-            System.out.println(i.next());
-        }
     }
 
 }

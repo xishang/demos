@@ -16,6 +16,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
     ===== 负载因子: 权衡`时间效率`和`空间效率`
     ===== 树化阀值: `TreeNode`所占空间较大, `泊松分布`测试, 实际使用时极少会发生`树化`的情况
     ===== 计算hash: 高位参与运算, hashCode ^ (hashCode >>> 16)
+    ===== 扩容算法: e.hash & oldCap == 0: 高位为0时不移动, 高位为1时移动oldCap个位置
      */
 
     // 初始容量: 必须是2的N次方, 这样可以直接和`capacity-1`做`&`运算来取余, 提高取余的效率
@@ -383,19 +384,19 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
     }
 
     /**
-     * Initializes or doubles table size.  If null, allocates in
-     * accord with initial capacity target held in field threshold.
-     * Otherwise, because we are using power-of-two expansion, the
-     * elements from each bin must either stay at same index, or move
-     * with a power of two offset in the new table.
-     *
-     * @return the table
+     * 新建或扩容(两倍扩容)
+     * -> e.hash & (oldCap - 1): 取余:    e.hash & 011111111
+     * -> e.hash & oldCap: 取oldCap最高位: e.hash & 100000000
+     * -> 高位为0: 新的位置为 e.hash & (2 * oldCap -1): rehash之后位置不变
+     * -> 高位为1: 新的位置为 e.hash & (2 * oldCap -1): 原来位置 + oldCap: 后移oldCap个位置
      */
     final Node<K,V>[] resize() {
         Node<K,V>[] oldTab = table;
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
         int oldThr = threshold;
         int newCap, newThr = 0;
+        // oldCap > 0: 原来的表非空, oldCap为原来表的长度
+        // table大小和threshold均设为原来的两倍
         if (oldCap > 0) {
             if (oldCap >= MAXIMUM_CAPACITY) {
                 threshold = Integer.MAX_VALUE;
@@ -405,8 +406,10 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
                     oldCap >= DEFAULT_INITIAL_CAPACITY)
                 newThr = oldThr << 1; // double threshold
         }
+        // table尚未初始化, 但是设置了初始容量
         else if (oldThr > 0) // initial capacity was placed in threshold
             newCap = oldThr;
+        // table尚未初始化, 且未设置初始容量
         else {               // zero initial threshold signifies using defaults
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
@@ -417,7 +420,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
                     (int)ft : Integer.MAX_VALUE);
         }
         threshold = newThr;
-        @SuppressWarnings({"rawtypes","unchecked"})
+        // 创建新的Node数组
         Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
         table = newTab;
         if (oldTab != null) {
@@ -425,16 +428,24 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
                 Node<K,V> e;
                 if ((e = oldTab[j]) != null) {
                     oldTab[j] = null;
+                    // 节点为单个Node, 直接在新table中进行定位: e.hash & (oldCapacity - 1)
                     if (e.next == null)
                         newTab[e.hash & (newCap - 1)] = e;
                     else if (e instanceof TreeNode)
                         ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
                     else { // preserve order
+                        // 先分离出两个链表: 扩容时元素相对位置不变, 扩容完成再将两个链表设置到相应的entry(正链)
+                        // 避免了java7时并发情况下扩容导致的死循环问题(倒链)
                         Node<K,V> loHead = null, loTail = null;
                         Node<K,V> hiHead = null, hiTail = null;
                         Node<K,V> next;
                         do {
                             next = e.next;
+                            // e.hash & (oldCap - 1): 取余:    e.hash & 011111111
+                            // e.hash & oldCap: 取oldCap最高位: e.hash & 100000000
+                            // 高位为0: 新的位置为 e.hash & (2 * oldCap -1): 不变
+                            // 高位为1: 新的位置为 e.hash & (2 * oldCap -1): 原来位置 + oldCap: 后移oldCap个位置
+                            // 如果前一个bit位是0, 则rehash之后不需要移动
                             if ((e.hash & oldCap) == 0) {
                                 if (loTail == null)
                                     loHead = e;
@@ -442,6 +453,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
                                     loTail.next = e;
                                 loTail = e;
                             }
+                            // 否则: 需要向后移动oldCapacity个位置
                             else {
                                 if (hiTail == null)
                                     hiHead = e;
@@ -631,6 +643,7 @@ public class HashMap<K,V> extends AbstractMap<K,V> {
      * ===== 由此可见: `HashMap.TreeNode`比`HashMap.Node`占用的空间大了两倍左右
      * ===== 因此在`HashMap`为了尽量避免使用`TreeNode`, 将`treeifyBin`的阀值设为8
      * ===== 按照泊松分布的统计结果, TREEIFY_THRESHOLD==8的效果是: `treeifyBin`的概率为"less than 1 in ten million"
+     * ===== 继承`LinkedHashMap.Entry`而不是直接继承`HashMap.Node`的原因: 方便扩展
      */
     static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
         TreeNode<K,V> parent;  // red-black tree links

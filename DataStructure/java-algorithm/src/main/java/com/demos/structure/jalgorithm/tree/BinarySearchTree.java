@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 /**
  * 二叉查找树
+ *
  * @param <T>
  */
 public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
@@ -13,6 +14,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
         BinaryNode<T> parent;
         BinaryNode<T> left;
         BinaryNode<T> right;
+
         public BinaryNode(T data, BinaryNode<T> parent, BinaryNode<T> left, BinaryNode<T> right) {
             this.data = data;
             this.parent = parent;
@@ -173,7 +175,7 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
     }
 
     @Override
-    public Iterator<T> preorderTraversal() {
+    public Iterator<T> iterator() {
         return new Iterator<T>() {
             BinaryNode<T> current = root;
             int index = 0;
@@ -207,18 +209,4 @@ public class BinarySearchTree<T extends Comparable<T>> implements Tree<T> {
         };
     }
 
-    @Override
-    public Iterator<T> inorderTraversal() {
-        return null;
-    }
-
-    @Override
-    public Iterator<T> postorderTraversal() {
-        return null;
-    }
-
-    @Override
-    public Iterator<T> iterator() {
-        return preorderTraversal();
-    }
 }

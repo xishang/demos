@@ -70,7 +70,7 @@ import java.util.ArrayList;
  * -> jta1.2: javax.transaction.Transactional
  * ===== 5.执行事务方法:
  * -> 1.获取事务管理器: PlatformTransactionManager, 如常用的DataSourceTransactionManager
- * -> 2.解析事务属性: 优先从Class获取, 若不存在再从Method获取属性信息(三种注解方式: 常用Spring的Transactional)
+ * -> 2.解析事务属性: 优先从Method获取, 若不存在再从Class获取属性信息(三种注解方式: 常用Spring的Transactional)
  * -> 3.创建事务信息TransactionInfo并设置到当前线程(ThreadLocal), 同时TransactionInfo会保存旧的事务信息以便恢复之前的事务(处理嵌套事务)
  * -> 4.执行目标方法
  * -> 5.若抛出异常, 则检查是否需要回滚, 如果需要回滚则执行事务回滚, 否则提交当前事务
@@ -101,6 +101,9 @@ import java.util.ArrayList;
  */
 public class TransactionAnalyzer {
 
+    /**
+     * 解析<tx:annotation-driven/>标签
+     */
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         // 注册广播监听: internalTransactionalEventListenerFactory
         registerTransactionalEventListenerFactory(parserContext);

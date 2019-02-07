@@ -24,6 +24,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.servlet.*;
 
+import javax.servlet.ServletContext;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

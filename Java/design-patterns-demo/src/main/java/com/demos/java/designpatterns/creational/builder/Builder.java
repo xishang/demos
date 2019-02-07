@@ -12,13 +12,13 @@ public abstract class Builder {
 
     protected Product product = new Product();
 
-    public abstract void buildPartA();
+    public abstract Builder buildPartA();
 
-    public abstract void buildPartB();
+    public abstract Builder buildPartB();
 
-    public abstract void buildPartC();
+    public abstract Builder buildPartC();
 
-    public Product getResult() {
+    public Product build() {
         return product;
     }
 

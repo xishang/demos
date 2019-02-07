@@ -23,9 +23,7 @@ import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author xishang
@@ -39,8 +37,8 @@ import java.util.List;
  * JoinPoint: 连接点
  * Introduction: 引入
  * Weaving: 织入
- * ===== 二、<aspectj-autoproxy />标签解析:
- * -> 1.解析<aspectj-autoproxy />标签: AspectJAutoProxyBeanDefinitionParser
+ * ===== 二、<aop:aspectj-autoproxy/>标签解析:
+ * -> 1.解析<aop:aspectj-autoproxy/>标签: AspectJAutoProxyBeanDefinitionParser
  * -> 2.注册AspectJ注解处理器: AnnotationAwareAspectJAutoProxyCreator, 该处理器继承了SmartInstantiationAwareBeanPostProcessor
  * -> 3.代理设置: proxy-target-class和expose-proxy
  * ===== 三、bean初始化创建代理对象:
@@ -66,7 +64,7 @@ import java.util.List;
 public class AopCreateAnalyzer {
 
     /**
-     * 解析<aspectj-autoproxy />标签: AspectJAutoProxyBeanDefinitionParser
+     * 解析<aop:aspectj-autoproxy/>标签: AspectJAutoProxyBeanDefinitionParser
      * 注册AspectJ注解处理器的BeanDefinition: AnnotationAwareAspectJAutoProxyCreator, 该处理器继承了SmartInstantiationAwareBeanPostProcessor
      */
     public static void registerAspectJAnnotationAutoProxyCreatorIfNecessary(
@@ -128,7 +126,7 @@ public class AopCreateAnalyzer {
         if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
             return bean;
         }
-        // bean无序增强: 直接返回
+        // bean无需增强: 直接返回
         if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
             return bean;
         }

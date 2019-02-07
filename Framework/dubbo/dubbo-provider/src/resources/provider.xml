@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+            http://dubbo.apache.org/schema/dubbo http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
+
+    <!-- dubbo标签:
+        <dubbo:service/>: 暴露服务
+        <dubbo:reference/>: 引用服务, 用于创建一个远程服务代理
+        <dubbo:protocol/>: 提供服务的协议, 协议由提供者指定, 消费者被动接受
+        <dubbo:application/>: 配置应用信息
+        <dubbo:registry/>: 注册中心
+        <dubbo:module/>: 配置模块信息(可选)
+        <dubbo:monitor/>: 监控中心(可选)
+        <dubbo:provider/>: 服务提供者配置(可选)
+        <dubbo:consumer/>: 服务消费者配置(可选)
+        <dubbo:method/>: 方法级的配置信息
+        <dubbo:argument/>: 方法参数配置
+    -->
+
+    <!-- 配置优先级:
+        1.方法级 -> 接口级 -> 全局配置
+        2.消费者 -> 提供者
+    -->
+
+    <!-- 提供方应用信息，用于计算依赖关系 -->
+    <dubbo:application name="dubbo-provider"/>
+
+    <!-- 使用multicast广播注册中心暴露服务地址 -->
+    <dubbo:registry address="zookeeper://47.98.191.186:2181"/>
+
+    <!-- 用dubbo协议在20880端口暴露服务 -->
+    <dubbo:protocol name="dubbo" port="20880"/>
+
+    <!-- 声明需要暴露的服务接口 -->
+    <dubbo:service interface="com.demo.framework.api.HelloService" ref="helloService"/>
+
+    <!-- 和本地bean一样实现服务 -->
+    <bean id="helloService" class="com.demo.framework.provider.HelloServiceImpl"/>
+    
+</beans>

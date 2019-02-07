@@ -33,7 +33,7 @@ import java.util.Properties;
  * === 1).Connection: dataSource.getConnection()
  * === 2).DataSource: 数据源
  * === 3).TransactionIsolationLevel: 隔离级别
- * === 4).boolean autoCommmit: 是否自动提交
+ * === 4).boolean autoCommit: 是否自动提交
  * -> 2.创建SQL执行器
  * -> 3.创建并返回DefaultSqlSession
  * ===== 三、创建SQL执行器:

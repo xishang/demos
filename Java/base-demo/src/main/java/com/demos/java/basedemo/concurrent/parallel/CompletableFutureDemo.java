@@ -109,6 +109,30 @@ public class CompletableFutureDemo {
         ForkJoinPool.commonPool().awaitQuiescence(5, TimeUnit.SECONDS);
     }
 
+    public static void complete() {
+        // 延迟的结果
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (Exception e) {
+            }
+            return "Hello, world!";
+        });
+        // === complete(): 设置结果且在Future.get()上阻塞的线程都会立即返回
+        new Thread(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (Exception e) {
+            }
+            future.complete("Changed!");
+        }).start();
+        // 获取结果: Future.get()
+        try {
+            System.out.println("future.get: " + future.get());
+        } catch (Exception e) {
+        }
+    }
+
     private static CompletableFuture<Integer> intFuture(int num, int wait) {
         return CompletableFuture.supplyAsync(() -> {
             System.out.printf("num [%d] after %d seconds\n", num, wait);
@@ -126,6 +150,7 @@ public class CompletableFutureDemo {
 
     public static void main(String[] args) {
         completableFuture();
+        complete();
     }
 
 }

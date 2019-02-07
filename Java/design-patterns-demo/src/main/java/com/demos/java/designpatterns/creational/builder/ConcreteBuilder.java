@@ -10,18 +10,21 @@ package com.demos.java.designpatterns.creational.builder;
 public class ConcreteBuilder extends Builder {
 
     @Override
-    public void buildPartA() {
+    public Builder buildPartA() {
         super.product.setPartA("组装具体部件A");
+        return this;
     }
 
     @Override
-    public void buildPartB() {
+    public Builder buildPartB() {
         super.product.setPartB("组装具体部件B");
+        return this;
     }
 
     @Override
-    public void buildPartC() {
+    public Builder buildPartC() {
         super.product.setPartC("组装具体部件C");
+        return this;
     }
 
 }

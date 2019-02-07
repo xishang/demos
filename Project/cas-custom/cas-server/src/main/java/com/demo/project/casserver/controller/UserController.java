@@ -5,6 +5,7 @@ import com.demo.project.casserver.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -37,6 +38,13 @@ public class UserController {
     public User updateUser(@PathVariable("id") Integer id, @RequestBody User user) {
         user.setId(id);
         return userService.updateUser(user);
+    }
+
+    @PostMapping(value = "/test2")
+    public Object test2(HttpServletRequest request) {
+        String some = request.getParameter("some");
+        String els = request.getParameter("els");
+        return "ok";
     }
 
     @DeleteMapping(value = "/users/{id}")

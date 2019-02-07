@@ -16,6 +16,11 @@ public class ObjectAdapter implements Target {
     }
 
     @Override
+    public String toString() {
+        return super.toString();
+    }
+
+    @Override
     public void request() {
         adaptee.specificRequest();
     }

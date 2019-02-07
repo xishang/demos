@@ -11,4 +11,10 @@ public class Animal {
         System.out.println("Animals can run!");
     }
 
+    public String name;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

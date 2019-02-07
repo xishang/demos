@@ -47,7 +47,7 @@ public class InsertSort {
                 mid = (start + end) / 2;
                 if (array[mid] > temp) { // 插入前面部分
                     end = mid - 1;
-                } else { // 插入前面部分
+                } else { // 插入后面部分
                     start = mid + 1;
                 }
             }

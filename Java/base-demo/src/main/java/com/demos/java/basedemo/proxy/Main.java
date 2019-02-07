@@ -31,7 +31,7 @@ public class Main {
         /*-------------------动态代理-JDK end-------------------*/
 
         /*-------------------动态代理-CGLib start-------------------*/
-        HistoryTeacher proxy3 = CGLibDynamicProxy.newInstance1(new HistoryTeacher());
+        HistoryTeacher proxy3 = CGLibDynamicProxy.newInstance(new HistoryTeacher());
         proxy3.teach("", 1l);
         /*-------------------动态代理-CGLib end-------------------*/
 
